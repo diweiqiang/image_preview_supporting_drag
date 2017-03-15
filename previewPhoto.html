@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="bootstrap.css">
+    <style>
+        .con4{
+            width:300px;
+            overflow:hidden;
+            margin:20px auto;
+            color:#ffffff;
+        }
+        .con4 .btn{
+            display: block;
+            width: 100%;
+            height: 40px;
+            line-height: 40px;
+            text-align: center;
+            background: #d8b49c;
+            font-size: 16px;
+            border-radius: 5px;
+        }
+        .upload{
+            position: relative;
+            float: left;
+        }
+        .upload-pic{
+            position:absolute;
+            width:100%;
+            height:40px;
+            left:0;
+            top:0;
+            opacity:0;
+            border-radius: 5px;
+        }
+        #cvs{
+            border:1px solid #000;
+            margin:20px 0 20px 50px;
+        }
+        #cvs.hovering{
+            box-shadow: inset 0 0 50px #bbb;
+        }
+
+    </style>
+</head>
+<body>
+<div class="con4">
+    <canvas id="cvs" width="200" height="200"></canvas>
+    <span class="btn upload">
+        上传头像
+        <input type="file" class="upload-pic" id="upload">
+    </span>
+    <p>
+        <label>读取进度：</label><progress id="progress" value="0" max="100"></progress>
+    </p>
+    <p id="status"></p>
+</div>
+
+<script>
+    var input1=document.getElementById('upload');
+    var canvas=document.getElementById('cvs');
+
+    if(typeof FileReader=='undefined'){
+        input1.setAttribute('disabled','disabled');
+    }else{
+        input1.addEventListener('change',readFile,false);
+    }
+
+    canvas.addEventListener('dragenter',handleFileDragEnter);
+    canvas.addEventListener('dragleave', handleFileDragLeave);
+    canvas.addEventListener('dragover', handleFileDragOver);
+    canvas.addEventListener('drop', handleFileDrop);
+
+    function handleFileDragEnter(e) {
+        e.stopPropagation();
+        e.preventDefault();
+
+        this.classList.add('hovering');
+    }
+
+    function handleFileDragLeave(e) {
+        e.stopPropagation();
+        e.preventDefault();
+
+        this.classList.remove('hovering');
+    }
+
+    function handleFileDragOver(e) {
+        e.stopPropagation();
+        e.preventDefault();
+
+        e.dataTransfer.dropEffect='copy';
+    }
+
+    function handleFileDrop(e) {
+        e.stopPropagation();
+        e.preventDefault();
+
+        this.classList.remove('hovering');
+
+        console.log(e);
+
+        var file=e.dataTransfer.files[0]||e.target.file[0];
+        var reader=new FileReader();
+        reader.onload=function (e) {
+            var image=new Image();
+            image.onload=function (e) {
+                var canvas=document.getElementById('cvs');
+                var context=canvas.getContext('2d');
+                context.clearRect(0,0,canvas.width,canvas.height);
+                context.drawImage(image,0,0,200,200);
+            };
+            image.src=e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+    
+    function readFile() {
+        var file=this.files[0];
+/* -----------此为进度条相关---------------------------*/
+        var size=file.size;
+        var currentLoad=0;
+        var progressBar=document.querySelector('#progress');
+/* -----------此为进度条相关 结束---------------------------*/
+        console.log(file);
+        if(!/image\/\w+/.test(file.type)){
+            alert('文件必须为图片');
+            return false;
+        }
+
+        var reader=new FileReader();
+        reader.onload=function (e) {
+            var image=new Image();
+            image.src=e.target.result;
+            console.log(image.src);
+
+            var max=200;
+            image.onload=function () {
+                var canvas=document.getElementById('cvs');
+                var context=canvas.getContext('2d');
+                context.clearRect(0,0,canvas.width,canvas.height);
+                context.drawImage(image,0,0,200,200);
+            }
+
+        };
+        reader.onprogress=function (e) {
+            currentLoad+=e.loaded;
+            progressBar.value=currentLoad/size*100;
+        };
+
+        reader.readAsDataURL(file);
+
+    }
+
+</script>
+</body>
+</html>
